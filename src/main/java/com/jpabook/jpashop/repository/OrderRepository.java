@@ -1,5 +1,6 @@
 package com.jpabook.jpashop.repository;
 
+import com.jpabook.jpashop.domain.Member;
 import com.jpabook.jpashop.domain.Order;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
@@ -43,23 +44,23 @@ public class OrderRepository {
         CriteriaBuilder cb = em.getCriteriaBuilder();
         CriteriaQuery<Order> cq = cb.createQuery(Order.class);
         Root<Order> o = cq.from(Order.class);
-        Join<Object, Object> m = o.join("member", JoinType.INNER);
-
+        Join<Order, Member> m = o.join("member", JoinType.INNER); //회원과 조인
         List<Predicate> criteria = new ArrayList<>();
-
+        //주문 상태 검색
         if (orderSearch.getOrderStatus() != null) {
-            Predicate status = cb.equal(o.join("status"), orderSearch.getOrderStatus());
+            Predicate status = cb.equal(o.get("status"),
+                    orderSearch.getOrderStatus());
             criteria.add(status);
         }
-
+        //회원 이름 검색
         if (StringUtils.hasText(orderSearch.getMemberName())) {
             Predicate name =
-                    cb.like(m.<String>get("name"), "%" + orderSearch.getMemberName() + "%");
+                    cb.like(m.<String>get("name"), "%" +
+                            orderSearch.getMemberName() + "%");
             criteria.add(name);
         }
-
         cq.where(cb.and(criteria.toArray(new Predicate[criteria.size()])));
-        TypedQuery<Order> query = em.createQuery(cq).setMaxResults(1000);
+        TypedQuery<Order> query = em.createQuery(cq).setMaxResults(1000); //최대
         return query.getResultList();
     }
 }
